@@ -1,19 +1,24 @@
 use std::pin::Pin;
 
+use crate::interface::solver::RemoteSolverClient;
+use crate::interface::solver::SolverClient;
 use crate::problem_handler::ProblemRepository;
 use crate::problem_handler::ProblemRow;
 use crate::problems::problem_kind::Problem;
 use crate::test_template::Test;
 use anyhow::Result;
+use contracts::SolveResponse;
 
 pub struct ProblemService {
     repo: ProblemRepository,
+    solve_client: RemoteSolverClient,
 }
 
 impl ProblemService {
     pub async fn default() -> Self {
         Self {
             repo: ProblemRepository::default().await,
+            solve_client: RemoteSolverClient::new("127.0.0.1:4000"),
         }
     }
 }
@@ -22,8 +27,14 @@ impl ProblemService {
     pub async fn get<P: Problem>(&self) -> Result<ProblemRow> {
         let data = P::create();
         let data_string = format!("{:?}", data);
-        let _request = P::into_request(data);
-        let answer = 0; //self.solver.solve(request).await?;
+        let request = P::into_request(data);
+        let answer = self.solve_client.solve(request).await?;
+        match answer {
+            SolveResponse::BadData => return Err(anyhow::Error),
+            SolveResponse::Fault => return Err(anyhow::Error),
+            _ => {}
+        }
+
         let id = self.repo.insert((data_string.clone(), answer)).await?;
         Ok(ProblemRow::new(id.try_into()?, answer, data_string))
     }
@@ -41,7 +52,8 @@ impl Test for ProblemService {
     fn test_object() -> Pin<Box<dyn Future<Output = Self> + Send>> {
         Box::pin(async move {
             let repo = ProblemRepository::test_object().await;
-            Self { repo }
+            let solve_client = RemoteSolverClient::default();
+            Self { repo, solve_client }
         })
     }
 }

@@ -1,8 +1,9 @@
-pub struct SolverService;
 use crate::solvers::*;
 use contracts::{SolveRequest, SolveResponse};
+
+pub struct SolverService;
 impl SolverService {
-    fn solve(req: SolveRequest) -> SolveResponse {
+    pub fn solve(req: SolveRequest) -> SolveResponse {
         log::debug!("received request for: {:?}", req);
         match_and_solve(req)
     }
