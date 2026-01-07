@@ -7,8 +7,11 @@ mod problem_service;
 mod problems;
 mod test_template;
 use crate::problem_service::ProblemService;
+use env_logger::Env;
 #[tokio::main]
+
 async fn main() -> Result<()> {
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let _service = ProblemService::default().await;
     Ok(())
 }
