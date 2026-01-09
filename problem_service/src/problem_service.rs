@@ -4,6 +4,7 @@ use crate::interface::solver::RemoteSolverClient;
 use crate::interface::solver::SolverClient;
 use crate::problem_handler::ProblemRepository;
 use crate::problem_handler::ProblemRow;
+use crate::problems::problem_kind::DBColumn;
 use crate::problems::problem_kind::Problem;
 use crate::test_template::Test;
 use anyhow::Result;
@@ -28,15 +29,7 @@ impl ProblemService {
 impl ProblemService {
     pub async fn get<P: Problem>(&self) -> Result<ProblemRow> {
         let data = P::create();
-        let data_string = format!("{:?}", data)
-            .strip_prefix('"')
-            .unwrap()
-            .strip_suffix('"')
-            .unwrap()
-            .to_string();
-        println!("data = {:?}", data);
-        println!("data_string = {:?}", data_string);
-        println!("len = {}", data_string.len());
+        let data_string = data.to_db_entry();
         let request = P::into_request(data);
         let answer = self.solve_client.solve(request).await?;
         let a = match answer {
@@ -45,7 +38,7 @@ impl ProblemService {
             SolveResponse::Fault => return Err(anyhow::anyhow!("Failed to get problem")),
         };
 
-        let id = self.repo.insert((data_string.clone(), a)).await?;
+        let id = self.repo.insert((&data_string, a)).await?;
         Ok(ProblemRow::new(id.try_into()?, a, data_string))
     }
     pub async fn validate(&self, id: i64, answer: i64) -> Result<bool> {

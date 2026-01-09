@@ -29,7 +29,7 @@ impl ProblemRepository {
         })
     }
 
-    pub async fn insert(&self, (data, answer): (String, i64)) -> anyhow::Result<usize> {
+    pub async fn insert(&self, (data, answer): (&String, i64)) -> anyhow::Result<usize> {
         let result = sqlx::query("INSERT INTO problems (data, answer) VALUES (?,?)")
             .bind(data)
             .bind(answer)
