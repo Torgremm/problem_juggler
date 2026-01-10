@@ -52,7 +52,8 @@ impl ProblemRow {
         answer == self.answer
     }
 }
-#[cfg(test)]
+
+#[cfg(feature = "test-utils")]
 impl ProblemRepository {
     pub async fn test_object() -> ProblemRepository {
         let pool = SqlitePoolOptions::new()

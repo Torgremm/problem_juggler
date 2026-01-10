@@ -1,12 +1,7 @@
 #![allow(dead_code)]
 use anyhow::Result;
-
-mod interface;
-mod problem_handler;
-mod problem_service;
-mod problems;
-use crate::problem_service::ProblemService;
 use env_logger::Env;
+use problem_service::ProblemService;
 #[tokio::main]
 
 async fn main() -> Result<()> {

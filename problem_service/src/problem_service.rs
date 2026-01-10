@@ -13,6 +13,12 @@ pub struct ProblemService {
 }
 
 impl ProblemService {
+    pub fn new(repo: ProblemRepository, solve_client: RemoteSolverClient) -> Self {
+        Self { repo, solve_client }
+    }
+}
+
+impl ProblemService {
     pub async fn default() -> Self {
         Self {
             repo: ProblemRepository::new("sqlite:./data/problems.db")
@@ -45,64 +51,5 @@ impl ProblemService {
     pub async fn query(&self, id: i64) -> Result<ProblemRow> {
         let problem = self.repo.get(id).await?;
         Ok(problem)
-    }
-}
-
-#[cfg(test)]
-impl ProblemService {
-    async fn test_object() -> ProblemService {
-        let repo = ProblemRepository::test_object().await;
-        let solve_client = RemoteSolverClient::default();
-        Self { repo, solve_client }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use contracts::SolveRequest;
-
-    type SqlxResult<T> = sqlx::Result<T>;
-
-    use super::*;
-    use rand::Rng;
-
-    struct TestProblem {
-        id: Option<i64>,
-        data: String,
-        answer: i64,
-    }
-
-    impl Problem for TestProblem {
-        type Data = String;
-        fn create() -> String {
-            let mut rng = rand::rng();
-            let count = rng.random_range(5..10);
-            std::iter::repeat_n('0', count).collect()
-        }
-        fn into_request(data: String) -> SolveRequest {
-            SolveRequest::TestProblem { data }
-        }
-    }
-    #[tokio::test]
-    async fn insert_shouldwork() {
-        let service = ProblemService::test_object().await;
-        let problem1 = service.get::<TestProblem>().await.unwrap();
-        let problem2 = service.get::<TestProblem>().await.unwrap();
-        let problem3 = service.get::<TestProblem>().await.unwrap();
-
-        assert!(problem2.id > problem1.id);
-        assert!(problem3.id > problem2.id);
-
-        let p1ans = problem1.data.len();
-        let p2ans = problem2.data.len();
-        let p3ans = problem3.data.len();
-
-        let validation1 = service.validate(problem1.id, p1ans as i64).await.unwrap();
-        let validation2 = service.validate(problem2.id, p2ans as i64).await.unwrap();
-        let validation3 = service.validate(problem3.id, p3ans as i64).await.unwrap();
-
-        assert!(validation1);
-        assert!(validation2);
-        assert!(validation3);
     }
 }
