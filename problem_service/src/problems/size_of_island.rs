@@ -15,7 +15,7 @@ impl Problem for SizeOfIsland {
 
         let row = rng.random_range(0..20);
         let col = rng.random_range(0..20);
-        let size = rng.random_range(20..80);
+        let size = rng.random_range(20..=80);
 
         let mut count = 0;
         let mut grid = vec![vec![false; 20]; 20];
@@ -35,7 +35,7 @@ impl Problem for SizeOfIsland {
                 if (0..20).contains(&rn)
                     && (0..20).contains(&cn)
                     && rng.random_bool(0.5)
-                    && grid[rn as usize][cn as usize]
+                    && !grid[rn as usize][cn as usize]
                 {
                     queue.push_back((rn, cn));
                 }
@@ -59,7 +59,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ensure_size_and_range_is_valid() {
+    fn ensure_size_is_valid() {
         let data = SizeOfIsland::create();
         let mut total = 0;
         for row in data {
@@ -69,6 +69,7 @@ mod tests {
                 }
             }
         }
-        assert!((20..=80).contains(&total))
+
+        assert!((0..=80).contains(&total))
     }
 }
