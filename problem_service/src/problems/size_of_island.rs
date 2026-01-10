@@ -10,6 +10,8 @@ pub struct SizeOfIsland {
     data: String,
     answer: i64,
 }
+
+const DIRECTIONS: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, 1), (0, -1)];
 impl Problem for SizeOfIsland {
     type Data = Vec<Vec<bool>>;
     fn create() -> Self::Data {
@@ -55,5 +57,3 @@ impl Problem for SizeOfIsland {
         SolveRequest::SizeOfIsland { data }
     }
 }
-
-const DIRECTIONS: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, 1), (0, -1)];

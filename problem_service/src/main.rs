@@ -5,7 +5,6 @@ mod interface;
 mod problem_handler;
 mod problem_service;
 mod problems;
-mod test_template;
 use crate::problem_service::ProblemService;
 use env_logger::Env;
 #[tokio::main]

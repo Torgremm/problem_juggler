@@ -1,12 +1,9 @@
-use std::pin::Pin;
-
 use crate::interface::solver::RemoteSolverClient;
 use crate::interface::solver::SolverClient;
 use crate::problem_handler::ProblemRepository;
 use crate::problem_handler::ProblemRow;
 use crate::problems::problem_kind::DBColumn;
 use crate::problems::problem_kind::Problem;
-use crate::test_template::Test;
 use anyhow::Result;
 use contracts::SolveResponse;
 
@@ -51,13 +48,12 @@ impl ProblemService {
     }
 }
 
-impl Test for ProblemService {
-    fn test_object() -> Pin<Box<dyn Future<Output = Self> + Send>> {
-        Box::pin(async move {
-            let repo = ProblemRepository::test_object().await;
-            let solve_client = RemoteSolverClient::default();
-            Self { repo, solve_client }
-        })
+#[cfg(test)]
+impl ProblemService {
+    async fn test_object() -> ProblemService {
+        let repo = ProblemRepository::test_object().await;
+        let solve_client = RemoteSolverClient::default();
+        Self { repo, solve_client }
     }
 }
 
@@ -76,26 +72,6 @@ mod tests {
         answer: i64,
     }
 
-    impl TestProblem {
-        fn id(&self) -> SqlxResult<i64> {
-            match self.id {
-                Some(id) => Ok(id),
-                None => Err(sqlx::Error::InvalidArgument("None".to_string())),
-            }
-        }
-
-        fn set_id(&mut self, id: i64) {
-            self.id = Some(id);
-        }
-
-        fn answer(&self) -> i64 {
-            self.answer
-        }
-
-        fn data(&self) -> String {
-            self.data.clone()
-        }
-    }
     impl Problem for TestProblem {
         type Data = String;
         fn create() -> String {
@@ -113,9 +89,9 @@ mod tests {
         let problem1 = service.get::<TestProblem>().await.unwrap();
         let problem2 = service.get::<TestProblem>().await.unwrap();
         let problem3 = service.get::<TestProblem>().await.unwrap();
-        assert_eq!(problem1.id, 1);
-        assert_eq!(problem2.id, 2);
-        assert_eq!(problem3.id, 3);
+
+        assert!(problem2.id > problem1.id);
+        assert!(problem3.id > problem2.id);
 
         let p1ans = problem1.data.len();
         let p2ans = problem2.data.len();

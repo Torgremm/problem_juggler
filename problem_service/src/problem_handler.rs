@@ -1,9 +1,6 @@
 use sqlx::{sqlite::SqlitePoolOptions, Row};
-use std::pin::Pin;
 
 use sqlx::{Result, SqlitePool};
-
-use crate::test_template::Test;
 
 pub struct ProblemRepository {
     pub pool: SqlitePool,
@@ -55,29 +52,28 @@ impl ProblemRow {
         answer == self.answer
     }
 }
-impl Test for ProblemRepository {
-    fn test_object() -> Pin<Box<dyn Future<Output = Self> + Send>> {
-        Box::pin(async move {
-            let pool = SqlitePoolOptions::new()
-                .max_connections(1)
-                .connect("sqlite::memory:")
-                .await
-                .expect("failed to create test db");
+#[cfg(test)]
+impl ProblemRepository {
+    pub async fn test_object() -> ProblemRepository {
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect("sqlite::memory:")
+            .await
+            .expect("failed to create test db");
 
-            sqlx::query(
-                r#"
+        sqlx::query(
+            r#"
                 CREATE TABLE problems (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     data TEXT NOT NULL,
                     answer INTEGER NOT NULL
                 )
                 "#,
-            )
-            .execute(&pool)
-            .await
-            .expect("failed to create schema");
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to create schema");
 
-            Self { pool }
-        })
+        Self { pool }
     }
 }
