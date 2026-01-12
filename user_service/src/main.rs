@@ -8,13 +8,15 @@ use std::sync::OnceLock;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Semaphore;
-use user_service::UserService;
+use user_service::user_service::UserService;
 
 static SERVICE: OnceLock<UserService> = OnceLock::new();
 
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    todo!();
+    return Ok(());
     let service = UserService::default().await;
     let _ = SERVICE.set(service);
 
@@ -51,22 +53,6 @@ async fn main() -> Result<()> {
                     return;
                 }
             };
-
-            let resp = match SERVICE
-                .get()
-                .expect("Catastrophic failure, service gone")
-                .get_dispatch(req)
-                .await
-            {
-                Ok(r) => r.to_response(),
-                Err(_) => {
-                    log::error!("Failed to generate problem");
-                    write_response(UserResponse::Fault, &mut socket).await;
-                    return;
-                }
-            };
-
-            write_response(resp, &mut socket).await;
         });
     }
 }

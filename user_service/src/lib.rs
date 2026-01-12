@@ -1,2 +1,2 @@
-mod user_service;
-mod user_repo;
+pub mod user_repo;
+pub mod user_service;
