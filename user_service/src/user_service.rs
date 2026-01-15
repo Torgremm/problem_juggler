@@ -1,3 +1,4 @@
+use crate::tokens::token_factory::Token;
 use crate::user_repo::UserRepoError;
 use crate::user_repo::UserRepository;
 use contracts::User;
@@ -27,8 +28,8 @@ impl UserService {
 impl UserService {
     pub async fn create_user(&self, user: UserCredentials) -> UserResponse {
         match self.repo.create_user(&user).await {
-            Ok(()) => {
-                let token = "aaaaaaaa".to_string();
+            Ok(row) => {
+                let token = Token::get(&row);
                 UserResponse::Valid(User {
                     name: user.name,
                     token,

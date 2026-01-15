@@ -15,7 +15,7 @@ impl UserRepository {
 }
 
 impl UserRepository {
-    pub async fn create_user(&self, user: &UserCredentials) -> Result<(), UserRepoError> {
+    pub async fn create_user(&self, user: &UserCredentials) -> Result<UserRow, UserRepoError> {
         let row = sqlx::query("SELECT id, name FROM users WHERE name = ?")
             .bind(&user.name)
             .fetch_optional(&self.pool)
@@ -25,9 +25,13 @@ impl UserRepository {
             return Err(UserRepoError::DuplicateName);
         }
 
-        self.insert(user).await?;
+        let id = self.insert(user).await?;
 
-        Ok(())
+        Ok(UserRow {
+            id,
+            name: user.name.clone(),
+            credentials: user.hash.clone(),
+        })
     }
     pub async fn get(&self, user: &UserCredentials) -> Result<String> {
         let _row =
@@ -40,14 +44,14 @@ impl UserRepository {
         Ok("aaaaaaaa".to_string())
     }
 
-    async fn insert(&self, user: &UserCredentials) -> Result<(), UserRepoError> {
-        let _result = sqlx::query("INSERT INTO users (name, credentials) VALUES (?,?)")
+    async fn insert(&self, user: &UserCredentials) -> Result<i64, UserRepoError> {
+        let result = sqlx::query("INSERT INTO users (name, credentials) VALUES (?,?)")
             .bind(user.name.clone())
             .bind(user.hash.clone())
             .execute(&self.pool)
             .await?;
 
-        Ok(())
+        Ok(result.last_insert_rowid())
     }
 }
 
@@ -120,5 +124,16 @@ impl UserRepository {
         .expect("failed to create schema");
 
         Self { pool }
+    }
+}
+
+#[cfg(test)]
+impl UserRow {
+    pub fn test_row(num: i64) -> Self {
+        Self {
+            id: num,
+            name: format!("user{}", num),
+            credentials: "verystrongand-secretpasswoerd!!!9".to_string(),
+        }
     }
 }
