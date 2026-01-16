@@ -2,6 +2,7 @@ use crate::interface::solver::RemoteSolverClient;
 use crate::interface::solver::SolverClient;
 use crate::problem_handler::ProblemRepository;
 use crate::problem_handler::ProblemRow;
+use crate::problems::count_islands::CountIslands;
 use crate::problems::largest_window::LargestWindow;
 use crate::problems::problem_kind::DBColumn;
 use crate::problems::problem_kind::Problem;
@@ -40,6 +41,7 @@ impl ProblemService {
             ProblemRequest::UnimplementedProblem => todo!(),
             ProblemRequest::TestProblem => todo!(),
             ProblemRequest::SizeOfIsland => Ok(self.get::<SizeOfIsland>().await?),
+            ProblemRequest::CountIslands => Ok(self.get::<CountIslands>().await?),
         }
     }
 }

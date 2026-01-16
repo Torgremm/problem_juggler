@@ -16,9 +16,7 @@ fn match_and_solve(req: SolveRequest) -> SolveResponse {
         SolveRequest::LargestWindowInArray { data } => solve_largest_window_in_array(data),
         SolveRequest::TestProblem { data } => solve_test_problem(data),
         SolveRequest::SizeOfIsland { data } => solve_size_of_island(data),
-        _ => {
-            log::error!("Unimplemented problem request");
-            SolveResponse::Fault
-        }
+        SolveRequest::CountIslands { data } => solve_count_islands(data),
+        SolveRequest::UnimplementedProblem { data: _ } => todo!(),
     }
 }

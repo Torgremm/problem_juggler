@@ -1,5 +1,5 @@
-use contracts::{ProblemResponse, User, UserCredentials, UserProblem};
-use sqlx::{sqlite::SqlitePoolOptions, Row};
+use contracts::UserCredentials;
+use sqlx::sqlite::SqlitePoolOptions;
 
 use sqlx::{Result, SqlitePool};
 

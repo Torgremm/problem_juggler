@@ -1,11 +1,10 @@
-use contracts::{ProblemRequest, SolveRequest};
+use contracts::SolveRequest;
 use std::fmt::Debug;
-
-use crate::problems::{largest_window::LargestWindow, size_of_island::SizeOfIsland};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ProblemKind {
     LargestWindowInArray,
+    CountIslands,
     SizeOfIsland,
     TestProblem,
 }
