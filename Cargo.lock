@@ -1111,6 +1111,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pretender"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "contracts",
+ "env_logger",
+ "log",
+ "rand 0.9.2",
+ "serde",
+ "tokio",
+ "wincode",
+]
+
+[[package]]
 name = "problem_service"
 version = "0.1.0"
 dependencies = [
