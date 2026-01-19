@@ -43,7 +43,8 @@ jobs:
       - name: Start solver_service
         working-directory: solver_service
         run: |
-          cargo run &   # run in background
+          setsid cargo run &
+          echo $! > solver.pid
 
           for i in $(seq 1 15); do
             if nc -z localhost 4000; then
@@ -64,6 +65,7 @@ jobs:
           if [ -f solver_service/solver.pid ]; then
             kill -- -$(cat solver_service/solver.pid) || true
           fi
+          sleep 1
 
       # Step 4: Stress test
       - name: Run stress test
