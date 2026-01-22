@@ -27,7 +27,13 @@ async fn main() -> Result<(), ServiceError> {
 
     let mut runner = StressRunner::new(user_service, solver_service, problem_service);
 
-    let _res = runner.run().await?;
+    match runner.run().await {
+        Ok(()) => {}
+        Err(e) => {
+            runner.shutdown().await;
+            return Err(e);
+        }
+    }
 
     runner.shutdown().await;
     Ok(())

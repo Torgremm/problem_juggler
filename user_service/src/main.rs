@@ -21,6 +21,7 @@ async fn main() -> Result<()> {
     let listener: TcpListener = TcpListener::bind("127.0.0.1:4002").await?;
     let sem = Arc::new(Semaphore::new(100));
     log::info!("UserService listening on 127.0.0.1:4002");
+    const MAX_FRAME: u64 = 4 * 1024 * 1024;
 
     loop {
         let permit = match sem.clone().acquire_owned().await {
@@ -39,6 +40,10 @@ async fn main() -> Result<()> {
             }
 
             let len = u64::from_be_bytes(len_buf);
+            if len > MAX_FRAME {
+                log::error!("Frame is too large: {}", len);
+                return;
+            }
             let mut buf = vec![0u8; len as usize];
             if socket.read_exact(&mut buf).await.is_err() {
                 return;

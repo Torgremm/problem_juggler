@@ -1,7 +1,8 @@
 #![allow(warnings)]
+use anyhow::Error as AnyError;
 use contracts::{
     ProblemRequest, ProblemResponse, ProblemServiceRequest, ProblemServiceResponse, SolveRequest,
-    SolveResponse, UserCredentials, UserRequest, ValidationRequest,
+    SolveResponse, UserCredentials, UserRequest, ValidationRequest, ValidationResponse,
 };
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::process::Child;
@@ -36,7 +37,7 @@ impl StressRunner {
         let solver_client = RemoteSolverClient::default();
 
         let mut hasher = DefaultHasher::new();
-        for n in 0..=1 {
+        for n in 0..=10 {
             format!("password{}", n).hash(&mut hasher);
             let user_req = UserRequest::Create(UserCredentials {
                 name: format!("user{}", n),
@@ -47,37 +48,52 @@ impl StressRunner {
             let _ = user_client
                 .req(user_req)
                 .await
-                .expect("user service failed");
+                .map_err(|e| ServiceError::fault("user", e.to_string()))?;
             let resp = match problem_client
                 .req(problem_req)
                 .await
-                .expect("problem service failed")
+                .map_err(|e| ServiceError::fault("problem", e.to_string()))?
             {
                 ProblemServiceResponse::Problem(ProblemResponse::Ok(p)) => p,
-                ProblemServiceResponse::Problem(ProblemResponse::Fault) => {
-                    unreachable!("problem service returned fault")
+                ProblemServiceResponse::Problem(ProblemResponse::Fault(e)) => {
+                    return Err(ServiceError::fault("problem", e))
                 }
-                _ => unreachable!("problem service returned the wrong response"),
+                _ => {
+                    return Err(ServiceError::fault(
+                        "problem",
+                        "Problem service returned the wrong response".into(),
+                    ))
+                }
             };
-            let solver_req = SolveRequest::LargestWindowInArray {
-                data: resp
+            let solver_req = {
+                let data = resp
                     .data
                     .trim_start_matches('[')
                     .trim_end_matches(']')
                     .split(',')
-                    .map(|v| v.parse().unwrap())
-                    .collect::<Vec<i64>>(),
-            };
+                    .map(|v| {
+                        v.trim()
+                            .parse::<i64>()
+                            .map_err(|e| ServiceError::fault("solver", e.to_string()))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
 
+                SolveRequest::LargestWindowInArray { data }
+            };
             let solution = match solver_client.req(solver_req).await {
                 Ok(SolveResponse::Solved(val)) => val,
-                _ => unreachable!("Solver service failed a request"),
+                _ => return Err(ServiceError::fault("solver", "".into())),
             };
 
-            problem_client.req(ProblemServiceRequest::Validation(ValidationRequest {
+            let validation_req = ProblemServiceRequest::Validation(ValidationRequest {
                 problem_id: resp.id,
                 answer: solution,
-            }));
+            });
+
+            let validation = match problem_client.req(validation_req).await {
+                Ok(ProblemServiceResponse::Validation(ValidationResponse::Valid)) => {}
+                _ => return Err(ServiceError::fault("solver", "".into())),
+            };
         }
 
         Ok(())
@@ -91,6 +107,21 @@ pub enum ServiceError {
         #[source]
         source: std::io::Error,
     },
+    #[error("service failed: '{service}'")]
+    Fault {
+        service: String,
+        #[source]
+        source: AnyError,
+    },
+}
+
+impl ServiceError {
+    pub fn fault(service: &str, message: String) -> Self {
+        ServiceError::Fault {
+            service: service.to_string(),
+            source: anyhow::anyhow!(message),
+        }
+    }
 }
 impl StressRunner {
     pub async fn shutdown(&mut self) {
@@ -102,5 +133,10 @@ impl StressRunner {
 
         let _ = self.user_service.kill();
         let _ = self.user_service.wait();
+    }
+    pub async fn panic_shutdown(&mut self, message: String) {
+        self.shutdown().await;
+        log::error!("Stress runner failed: {}", message);
+        panic!()
     }
 }

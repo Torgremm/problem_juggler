@@ -51,7 +51,7 @@ pub struct UserProblem {
 #[derive(Clone, Debug, PartialEq, SchemaWrite, SchemaRead)]
 pub enum ProblemResponse {
     Ok(UserProblem),
-    Fault,
+    Fault(String),
 }
 
 #[derive(Clone, Debug, PartialEq, SchemaWrite, SchemaRead)]
