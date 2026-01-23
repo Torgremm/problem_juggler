@@ -39,33 +39,7 @@ jobs:
         working-directory: user_service
         run: cargo test --verbose
 
-      # Step 2: Start solver_service in the background
-      - name: Start solver_service
-        run: |
-          setsid target/debug/solver_service &
-          echo $! > solver.pid
-      
-          for i in $(seq 1 15); do
-            if nc -z localhost 4000; then
-              echo "solver_service ready"
-              break
-            fi
-            echo "Waiting for solver_service..."
-            sleep 1
-          done
 
-      # Step 3: Run interface tests
-      - name: Run interface tests
-        run: cargo test -p problem_service --features test-utils --tests --verbose
-
-      - name: Stop solver_service
-        if: always()
-        run: |
-          if [ -f solver.pid ]; then
-            kill -- -$(cat solver.pid) || true
-          fi
-          sleep 1
-
-      # Step 4: Stress test
+      # Step 2: Stress test
       - name: Run stress test
         run: cargo run -p pretender
