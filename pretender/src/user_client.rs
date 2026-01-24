@@ -1,8 +1,6 @@
 use contracts::user::UserRequest;
 use contracts::user::UserResponse;
 
-use crate::client::Client;
-
 pub struct RemoteUserClient {
     addr: &'static str,
 }
@@ -21,7 +19,7 @@ impl Default for RemoteUserClient {
     }
 }
 
-impl Client for RemoteUserClient {
+impl contracts::Client for RemoteUserClient {
     type Req = UserRequest;
     type Recv = UserRequest;
     fn get_addr(&self) -> &str {

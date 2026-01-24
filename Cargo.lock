@@ -1519,6 +1519,7 @@ dependencies = [
  "anyhow",
  "contracts",
  "env_logger",
+ "futures",
  "log",
  "tokio",
  "wincode",

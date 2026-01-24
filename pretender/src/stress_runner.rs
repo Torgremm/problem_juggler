@@ -1,5 +1,6 @@
 #![allow(warnings)]
 use anyhow::Error as AnyError;
+use contracts::Client;
 use contracts::{
     problem::ProblemRequest, problem::ProblemResponse, problem::ProblemServiceRequest,
     problem::ProblemServiceResponse, problem::ValidationRequest, problem::ValidationResponse,
@@ -11,7 +12,6 @@ use std::thread;
 use std::time::Duration;
 use thiserror::Error;
 
-use crate::client::Client;
 use crate::problem_client::RemoteProblemClient;
 use crate::solver_client::RemoteSolverClient;
 use crate::user_client::RemoteUserClient;

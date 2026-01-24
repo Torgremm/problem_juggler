@@ -4,57 +4,39 @@ use std::sync::Arc;
 use crate::solver_service::SolverService;
 use anyhow::Result;
 use contracts::solver::{SolveRequest, SolveResponse};
+use contracts::Listener;
 use env_logger::Env;
+use futures::future::BoxFuture;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Semaphore;
 mod solver_service;
 mod solvers;
+
+struct SolverListener {
+    addr: &'static str,
+}
+
+impl contracts::Listener for SolverListener {
+    type Recv = SolveRequest;
+    fn get_addr(&self) -> &str {
+        self.addr
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    let listener: TcpListener = TcpListener::bind("127.0.0.1:4000").await?;
-    let sem = Arc::new(Semaphore::new(100));
-    log::info!("SolverService listening on 127.0.0.1:4000");
-    const MAX_FRAME: u64 = 4 * 1024 * 1024;
-    loop {
-        let permit = match sem.clone().acquire_owned().await {
-            Ok(p) => p,
-            Err(e) => {
-                log::error!("Failed to aquire permit from semaphore: {}", e);
-                continue;
-            }
-        };
-        let (mut socket, _) = listener.accept().await?;
-        tokio::spawn(async move {
-            let _permit = permit;
-            let mut len_buf = [0u8; 8];
-            if socket.read_exact(&mut len_buf).await.is_err() {
-                return;
-            }
-            let len = u64::from_be_bytes(len_buf);
-            if len > MAX_FRAME {
-                log::error!("Frame is too large: {}", len);
-                return;
-            }
-            let mut buf = vec![0u8; len as usize];
-            if socket.read_exact(&mut buf).await.is_err() {
-                return;
-            }
+    let listener = SolverListener {
+        addr: "127.0.0.1:4000",
+    };
+    listener.listen(handle_request).await?;
+    Ok(())
+}
 
-            let req: SolveRequest = match wincode::deserialize(&buf) {
-                Ok(r) => r,
-                Err(_) => {
-                    log::error!("Failed to serialize a request");
-                    write_response(SolveResponse::Fault, &mut socket).await;
-                    return;
-                }
-            };
-
-            let resp = SolverService::solve(req).await;
-            write_response(resp, &mut socket).await;
-        });
-    }
+async fn handle_request(req: SolveRequest, mut socket: TcpStream) {
+    let sol = SolverService::solve(req).await;
+    write_response(sol, &mut socket).await;
 }
 
 async fn write_response(response: SolveResponse, socket: &mut TcpStream) {

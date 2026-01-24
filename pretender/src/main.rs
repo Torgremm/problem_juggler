@@ -1,5 +1,4 @@
 #![allow(warnings)]
-mod client;
 mod problem_client;
 mod solver_client;
 mod stress_runner;

@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
         addr: "127.0.0.1:4001",
     };
 
-    listener.listen(Arc::new(match_request)).await?;
+    listener.listen(match_request).await?;
     Ok(())
 }
 async fn write_response(response: ProblemServiceResponse, mut socket: TcpStream) -> Result<()> {
@@ -60,13 +60,11 @@ async fn write_validation(response: ValidationResponse, mut socket: TcpStream) {
     write_response(ProblemServiceResponse::Validation(response), socket).await;
 }
 
-fn match_request(req: ProblemServiceRequest, mut socket: TcpStream) -> BoxFuture<'static, ()> {
-    Box::pin(async move {
-        match req {
-            ProblemServiceRequest::Problem(r) => handle_problem_request(r, socket).await,
-            ProblemServiceRequest::Validation(r) => handle_validation_request(r, socket).await,
-        }
-    })
+async fn match_request(req: ProblemServiceRequest, mut socket: TcpStream) {
+    match req {
+        ProblemServiceRequest::Problem(r) => handle_problem_request(r, socket).await,
+        ProblemServiceRequest::Validation(r) => handle_validation_request(r, socket).await,
+    }
 }
 
 async fn handle_problem_request(req: ProblemRequest, mut socket: TcpStream) {

@@ -1,7 +1,6 @@
 use contracts::problem::ProblemServiceRequest;
 use contracts::problem::ProblemServiceResponse;
-
-use crate::client::Client;
+use contracts::Client;
 
 pub struct RemoteProblemClient {
     addr: &'static str,
@@ -21,7 +20,7 @@ impl Default for RemoteProblemClient {
     }
 }
 
-impl Client for RemoteProblemClient {
+impl contracts::Client for RemoteProblemClient {
     type Req = ProblemServiceRequest;
     type Recv = ProblemServiceResponse;
     fn get_addr(&self) -> &str {

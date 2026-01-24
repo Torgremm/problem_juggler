@@ -1,7 +1,6 @@
 use contracts::solver::SolveRequest;
 use contracts::solver::SolveResponse;
-
-use crate::client::Client;
+use contracts::Client;
 
 pub struct RemoteSolverClient {
     addr: &'static str,
@@ -21,7 +20,7 @@ impl Default for RemoteSolverClient {
     }
 }
 
-impl Client for RemoteSolverClient {
+impl contracts::Client for RemoteSolverClient {
     type Req = SolveRequest;
     type Recv = SolveResponse;
     fn get_addr(&self) -> &str {
