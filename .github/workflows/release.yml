@@ -22,8 +22,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --pull -t ghcr.io/torgremm/problem_juggler/solver_service:latest ./solver_service
-          
+          docker build -t ghcr.io/torgremm/problem_juggler/solver_service:latest -f solver_service/Dockerfile .
 
       - name: Push Docker image
         run: |
