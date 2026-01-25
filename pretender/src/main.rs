@@ -25,19 +25,19 @@ async fn main() -> Result<(), ServiceError> {
     let user_service = start_and_wait_service(
         &user_service_dir,
         &contracts::user::url(),
-        Duration::from_secs(5),
+        Duration::from_secs(10),
     )
     .await?;
     let solver_service = start_and_wait_service(
         &solver_service_dir,
         &contracts::solver::url(),
-        Duration::from_secs(5),
+        Duration::from_secs(10),
     )
     .await?;
     let problem_service = start_and_wait_service(
         &problem_service_dir,
         &contracts::solver::url(),
-        Duration::from_secs(5),
+        Duration::from_secs(10),
     )
     .await?;
 
