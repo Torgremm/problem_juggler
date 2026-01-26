@@ -44,7 +44,7 @@ impl StressRunner {
         let solver_client = RemoteSolverClient::default();
 
         let mut hasher = DefaultHasher::new();
-        for n in 0..=10 {
+        for n in 0..=1000 {
             format!("password{}", n).hash(&mut hasher);
             let user_req = UserRequest::Create(UserCredentials {
                 name: format!("user{}", n),
